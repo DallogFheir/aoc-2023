@@ -21,7 +21,7 @@ let map_to_num_of_wins cards =
          else failwith ("Pattern did not match line " ^ line ^ ".") )
 
 let part_1_aux path =
-  Common.file_to_list path |> map_to_num_of_wins
+  Utils.file_to_list path |> map_to_num_of_wins
   |> List.fold_left
        (fun sum num_of_wins ->
          sum
@@ -32,14 +32,14 @@ let part_1_aux path =
        0
 
 let part_2_aux path =
-  let lines = Common.file_to_list path in
+  let lines = Utils.file_to_list path in
   lines |> map_to_num_of_wins
   |> List.fold_left
        (fun (count, prev) num_of_wins ->
          match prev with
          | head :: tail ->
              ( count + head
-             , Common.map2_shortest
+             , Utils.map2_shortest
                  (fun a b -> a + b)
                  (List.init num_of_wins (fun _ -> head))
                  tail )

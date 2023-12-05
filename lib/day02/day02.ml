@@ -74,7 +74,7 @@ let find_minimum game =
 let get_power_set (red, green, blue) = red * green * blue
 
 let part_1_aux path =
-  Common.file_to_list path
+  Utils.file_to_list path
   |> List.fold_left
        (fun acc game ->
          let game_id, grabs = find_each_grab game in
@@ -86,7 +86,7 @@ let test_1 () = part_1_aux "lib/day02/test.txt" |> print_int
 let part_1 () = part_1_aux "lib/day02/input.txt"
 
 let part_2_aux path =
-  Common.file_to_list path
+  Utils.file_to_list path
   |> List.fold_left
        (fun acc game ->
          let _, grabs = find_each_grab game in

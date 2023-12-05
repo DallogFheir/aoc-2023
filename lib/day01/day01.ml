@@ -62,7 +62,7 @@ let find_first_and_last_digit_with_words str =
   aux (' ', ' ') str
 
 let runner fn path =
-  Common.file_to_list path
+  Utils.file_to_list path
   |> List.fold_left
        (fun acc el ->
          let first, last = fn el in

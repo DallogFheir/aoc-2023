@@ -3,10 +3,10 @@ let extract_nums_and_symbols lines =
   let symbol_coords = Hashtbl.create num_of_chars in
   let nums =
     lines
-    |> Common.fold_lefti
+    |> Utils.fold_lefti
          (fun acc line_idx line ->
            line |> String.to_seq |> List.of_seq
-           |> Common.fold_lefti
+           |> Utils.fold_lefti
                 (fun ((nums, numAcc) as acc) symbol_idx symbol ->
                   match (symbol, String.length numAcc) with
                   | '0' .. '9', _ ->
@@ -38,7 +38,7 @@ let extract_nums_and_symbols lines =
   (nums, symbol_coords)
 
 let part_1_aux path =
-  let lines = Common.file_to_list path in
+  let lines = Utils.file_to_list path in
   let nums, symbols = extract_nums_and_symbols lines
   and num_of_rows = List.length lines
   and num_of_cols = List.hd lines |> String.length in
@@ -49,7 +49,7 @@ let part_1_aux path =
       if
         List.init (String.length num_str) (fun idx -> idx + start_col_coord)
         |> List.exists (fun col_coord ->
-               Common.get_neighbor_idxs (row_coord, col_coord) num_of_rows
+               Utils.get_neighbor_idxs (row_coord, col_coord) num_of_rows
                  num_of_cols
                |> List.exists (fun coord -> Hashtbl.mem symbols coord) )
       then int_of_string num_str
@@ -57,7 +57,7 @@ let part_1_aux path =
     0 nums
 
 let part_2_aux path =
-  let lines = Common.file_to_list path in
+  let lines = Utils.file_to_list path in
   let nums, symbols = extract_nums_and_symbols lines
   and num_of_rows = List.length lines
   and num_of_cols = List.hd lines |> String.length in
@@ -67,7 +67,7 @@ let part_2_aux path =
       let _ =
         List.init (String.length num_str) (fun idx -> idx + start_col_coord)
         |> List.exists (fun col_coord ->
-               Common.get_neighbor_idxs (row_coord, col_coord) num_of_rows
+               Utils.get_neighbor_idxs (row_coord, col_coord) num_of_rows
                  num_of_cols
                |> List.exists (fun coord ->
                       if Hashtbl.find_opt symbols coord = Some '*' then (
