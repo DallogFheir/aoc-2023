@@ -94,21 +94,13 @@ let part_2_aux path =
              failwith "This should not happen." )
        0
 
-let test_1 () = part_1_aux "lib/day03/test.txt"
+let test_1 () = part_1_aux "lib/day03/test.txt" |> print_int
 
 let part_1 () = part_1_aux "lib/day03/input.txt"
 
-let test_2 () = part_2_aux "lib/day03/test.txt"
+let test_2 () = part_2_aux "lib/day03/test.txt" |> print_int
 
 let part_2 () = part_2_aux "lib/day03/input.txt"
-
-let test () =
-  print_string "Test part 1: " ;
-  test_1 () |> print_int ;
-  print_newline () ;
-  print_string "Test part 2: " ;
-  test_2 () |> print_int ;
-  print_newline ()
 
 let solution () =
   print_string "Part 1: " ;

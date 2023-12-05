@@ -69,23 +69,16 @@ let runner fn path =
          (10 * parse_int_from_char first) + parse_int_from_char last + acc )
        0
 
-let test_1 () = runner find_first_and_last_digit "lib/day01/test1.txt"
+let test_1 () =
+  runner find_first_and_last_digit "lib/day01/test1.txt" |> print_int
 
 let part_1 () = runner find_first_and_last_digit "lib/day01/input.txt"
 
 let test_2 () =
-  runner find_first_and_last_digit_with_words "lib/day01/test2.txt"
+  runner find_first_and_last_digit_with_words "lib/day01/test2.txt" |> print_int
 
 let part_2 () =
   runner find_first_and_last_digit_with_words "lib/day01/input.txt"
-
-let test () =
-  print_string "Test part 1: " ;
-  test_1 () |> print_int ;
-  print_newline () ;
-  print_string "Test part 2: " ;
-  test_2 () |> print_int ;
-  print_newline ()
 
 let solution () =
   print_string "Part 1: " ;

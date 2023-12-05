@@ -81,7 +81,7 @@ let part_1_aux path =
          (if check_if_possible grabs then game_id else 0) + acc )
        0
 
-let test_1 () = part_1_aux "lib/day02/test.txt"
+let test_1 () = part_1_aux "lib/day02/test.txt" |> print_int
 
 let part_1 () = part_1_aux "lib/day02/input.txt"
 
@@ -93,17 +93,9 @@ let part_2_aux path =
          (find_minimum grabs |> get_power_set) + acc )
        0
 
-let test_2 () = part_2_aux "lib/day02/test.txt"
+let test_2 () = part_2_aux "lib/day02/test.txt" |> print_int
 
 let part_2 () = part_2_aux "lib/day02/input.txt"
-
-let test () =
-  print_string "Test part 1: " ;
-  test_1 () |> print_int ;
-  print_newline () ;
-  print_string "Test part 2: " ;
-  test_2 () |> print_int ;
-  print_newline ()
 
 let solution () =
   print_string "Part 1: " ;
