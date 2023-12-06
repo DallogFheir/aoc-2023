@@ -5,6 +5,11 @@ let file_to_list path =
   in
   read_file [] |> List.rev
 
+let file_to_string path =
+  let file = open_in_bin path in
+  let content = really_input_string file (in_channel_length file) in
+  close_in file ; content
+
 let zip_with_index lst = List.mapi (fun idx el -> (idx, el)) lst
 
 let fold_lefti fn acc lst =
@@ -35,3 +40,19 @@ let get_neighbor_idxs (row_idx, col_idx) row_length col_length =
                 then Some (row_coord, col_coord)
                 else None ) )
   |> List.flatten
+
+let find_max comparator lst =
+  match
+    List.fold_left
+      (fun max value ->
+        match max with
+        | Some prevMax ->
+            Some (if comparator prevMax value < 0 then value else prevMax)
+        | None ->
+            Some value )
+      None lst
+  with
+  | Some max ->
+      max
+  | None ->
+      failwith "List is empty."
