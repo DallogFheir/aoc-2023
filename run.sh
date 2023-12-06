@@ -18,4 +18,4 @@ fi
 
 echo -e "(executable\n (public_name aoc2023)\n (name main)\n (libraries day$dayStr))" > ./bin/dune
 echo "Day$dayStr.$func ()" > ./bin/main.ml
-dune build && ./_build/default/bin/main.exe
+dune build --profile release && ./_build/default/bin/main.exe
