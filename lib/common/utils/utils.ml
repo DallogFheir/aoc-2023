@@ -10,6 +10,8 @@ let file_to_string path =
   let content = really_input_string file (in_channel_length file) in
   close_in file ; content
 
+let is_int num = float_of_int (int_of_float num) = num
+
 let zip_with_index lst = List.mapi (fun idx el -> (idx, el)) lst
 
 let fold_lefti fn acc lst =
