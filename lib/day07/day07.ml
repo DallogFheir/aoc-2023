@@ -143,11 +143,15 @@ let part_1_aux path = calculate_winnings get_hand_type cards path
 let part_2_aux path =
   calculate_winnings get_hand_type_with_joker cards_with_joker path
 
-let test_1 () = part_1_aux "lib/day07/test.txt" |> print_int
+let test_1 () =
+  part_1_aux "lib/day07/test.txt" |> print_int ;
+  print_newline ()
 
 let part_1 () = part_1_aux "lib/day07/input.txt"
 
-let test_2 () = part_2_aux "lib/day07/test.txt" |> print_int
+let test_2 () =
+  part_2_aux "lib/day07/test.txt" |> print_int ;
+  print_newline ()
 
 let part_2 () = part_2_aux "lib/day07/input.txt"
 

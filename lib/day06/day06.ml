@@ -38,11 +38,15 @@ let part_2_aux path =
   | _ ->
       failwith "Invalid input."
 
-let test_1 () = part_1_aux "lib/day06/test.txt" |> print_int
+let test_1 () =
+  part_1_aux "lib/day06/test.txt" |> print_int ;
+  print_newline ()
 
 let part_1 () = part_1_aux "lib/day06/input.txt"
 
-let test_2 () = part_2_aux "lib/day06/test.txt" |> print_int
+let test_2 () =
+  part_2_aux "lib/day06/test.txt" |> print_int ;
+  print_newline ()
 
 let part_2 () = part_2_aux "lib/day06/input.txt"
 

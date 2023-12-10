@@ -96,11 +96,15 @@ let part_2_aux path =
          lcm * (float_of_int factor ** float_of_int count |> int_of_float) )
        1
 
-let test_1 () = part_1_aux "lib/day08/test.txt" |> print_int
+let test_1 () =
+  part_1_aux "lib/day08/test.txt" |> print_int ;
+  print_newline ()
 
 let part_1 () = part_1_aux "lib/day08/input.txt"
 
-let test_2 () = part_2_aux "lib/day08/test.txt" |> print_int
+let test_2 () =
+  part_2_aux "lib/day08/test.txt" |> print_int ;
+  print_newline ()
 
 let part_2 () = part_2_aux "lib/day08/input.txt"
 

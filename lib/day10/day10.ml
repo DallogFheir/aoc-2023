@@ -182,7 +182,8 @@ let part_2_aux path =
 let test_1 () =
   part_1_aux "lib/day10/test1.txt" |> print_int ;
   print_newline () ;
-  part_1_aux "lib/day10/test2.txt" |> print_int
+  part_1_aux "lib/day10/test2.txt" |> print_int ;
+  print_newline ()
 
 let part_1 () = part_1_aux "lib/day10/input.txt"
 
@@ -191,7 +192,8 @@ let test_2 () =
   print_newline () ;
   part_2_aux "lib/day10/test4.txt" |> print_int ;
   print_newline () ;
-  part_2_aux "lib/day10/test5.txt" |> print_int
+  part_2_aux "lib/day10/test5.txt" |> print_int ;
+  print_newline ()
 
 let part_2 () = part_2_aux "lib/day10/input.txt"
 

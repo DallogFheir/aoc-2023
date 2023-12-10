@@ -57,11 +57,15 @@ let part_1_aux path = solve predict_next_value path
 
 let part_2_aux path = solve predict_previous_value path
 
-let test_1 () = part_1_aux "lib/day09/test.txt" |> print_int
+let test_1 () =
+  part_1_aux "lib/day09/test.txt" |> print_int ;
+  print_newline ()
 
 let part_1 () = part_1_aux "lib/day09/input.txt"
 
-let test_2 () = part_2_aux "lib/day09/test.txt" |> print_int
+let test_2 () =
+  part_2_aux "lib/day09/test.txt" |> print_int ;
+  print_newline ()
 
 let part_2 () = part_2_aux "lib/day09/input.txt"
 

@@ -70,12 +70,14 @@ let runner fn path =
        0
 
 let test_1 () =
-  runner find_first_and_last_digit "lib/day01/test1.txt" |> print_int
+  runner find_first_and_last_digit "lib/day01/test1.txt" |> print_int ;
+  print_newline ()
 
 let part_1 () = runner find_first_and_last_digit "lib/day01/input.txt"
 
 let test_2 () =
-  runner find_first_and_last_digit_with_words "lib/day01/test2.txt" |> print_int
+  runner find_first_and_last_digit_with_words "lib/day01/test2.txt" |> print_int ;
+  print_newline ()
 
 let part_2 () =
   runner find_first_and_last_digit_with_words "lib/day01/input.txt"

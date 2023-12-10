@@ -48,11 +48,15 @@ let part_2_aux path =
        (0, List.init (List.length lines) (fun _ -> 1))
   |> fst
 
-let test_1 () = part_1_aux "lib/day04/test.txt" |> print_int
+let test_1 () =
+  part_1_aux "lib/day04/test.txt" |> print_int ;
+  print_newline ()
 
 let part_1 () = part_1_aux "lib/day04/input.txt"
 
-let test_2 () = part_2_aux "lib/day04/test.txt" |> print_int
+let test_2 () =
+  part_2_aux "lib/day04/test.txt" |> print_int ;
+  print_newline ()
 
 let part_2 () = part_2_aux "lib/day04/input.txt"
 
