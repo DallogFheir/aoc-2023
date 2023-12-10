@@ -5,6 +5,14 @@ let file_to_list path =
   in
   read_file [] |> List.rev
 
+let file_to_grid path =
+  let file_lst = file_to_list path in
+  let grid = Array.make (List.length file_lst) (Array.make 0 ' ') in
+  List.iteri
+    (fun idx line -> grid.(idx) <- line |> String.to_seq |> Array.of_seq)
+    file_lst ;
+  grid
+
 let file_to_string path =
   let file = open_in_bin path in
   let content = really_input_string file (in_channel_length file) in
