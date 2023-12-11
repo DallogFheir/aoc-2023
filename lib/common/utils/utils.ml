@@ -66,3 +66,30 @@ let find_max comparator lst =
       max
   | None ->
       failwith "List is empty."
+
+let loop callback loop_from loop_to =
+  if loop_from > loop_to then
+    failwith
+      ( string_of_int loop_to ^ " is greater than " ^ string_of_int loop_from
+      ^ "." )
+  else
+    let rec loop_aux i =
+      if i > loop_to then ()
+      else (
+        callback i ;
+        loop_aux (i + 1) )
+    in
+    loop_aux loop_from
+
+let loop_with_break callback loop_from loop_to =
+  if loop_from > loop_to then
+    failwith
+      ( string_of_int loop_to ^ " is greater than " ^ string_of_int loop_from
+      ^ "." )
+  else
+    let rec loop_with_break_aux i =
+      if i > loop_to then false
+      else if callback i then true
+      else loop_with_break_aux (i + 1)
+    in
+    loop_with_break_aux loop_from
