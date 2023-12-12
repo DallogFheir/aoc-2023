@@ -122,7 +122,7 @@ let get_outside_tiles pipes row_length col_length =
   in
   let rec get_outside_tiles_aux queue outside_acc =
     match queue with
-    | ((row_idx, col_idx) as head) :: tail ->
+    | head :: tail ->
         if Hashtbl.mem visited head then get_outside_tiles_aux tail outside_acc
         else (
           Hashtbl.add visited head true ;
