@@ -93,3 +93,9 @@ let loop_with_break callback loop_from loop_to =
       else loop_with_break_aux (i + 1)
     in
     loop_with_break_aux loop_from
+
+let transpose grid =
+  let new_row_length = Array.length grid
+  and new_col_length = Array.length grid.(0) in
+  Array.init new_col_length (fun i ->
+      Array.init new_row_length (fun j -> grid.(j).(i)) )
