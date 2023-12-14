@@ -67,7 +67,7 @@ let find_max comparator lst =
   | None ->
       failwith "List is empty."
 
-let loop callback loop_from loop_to =
+let loop ?(step = 1) callback loop_from loop_to =
   if loop_from > loop_to then
     failwith
       ( string_of_int loop_to ^ " is greater than " ^ string_of_int loop_from
@@ -77,11 +77,11 @@ let loop callback loop_from loop_to =
       if i > loop_to then ()
       else (
         callback i ;
-        loop_aux (i + 1) )
+        loop_aux (i + step) )
     in
     loop_aux loop_from
 
-let loop_with_break callback loop_from loop_to =
+let loop_with_break ?(step = 1) callback loop_from loop_to =
   if loop_from > loop_to then
     failwith
       ( string_of_int loop_to ^ " is greater than " ^ string_of_int loop_from
@@ -90,7 +90,7 @@ let loop_with_break callback loop_from loop_to =
     let rec loop_with_break_aux i =
       if i > loop_to then false
       else if callback i then true
-      else loop_with_break_aux (i + 1)
+      else loop_with_break_aux (i + step)
     in
     loop_with_break_aux loop_from
 
@@ -99,3 +99,15 @@ let transpose grid =
   and new_col_length = Array.length grid.(0) in
   Array.init new_col_length (fun i ->
       Array.init new_row_length (fun j -> grid.(j).(i)) )
+
+let clone_2d_grid grid =
+  Array.init (Array.length grid) (fun idx -> Array.copy grid.(idx))
+
+let reverse_array array =
+  let length = Array.length array in
+  Array.init length (fun idx -> array.(length - idx - 1))
+
+let array_count_if predicate array =
+  Array.fold_left
+    (fun count el -> count + if predicate el then 1 else 0)
+    0 array
