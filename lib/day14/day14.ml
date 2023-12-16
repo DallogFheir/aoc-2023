@@ -81,7 +81,7 @@ let part_2_aux path =
           and adjusted_target = target - (found_idx - 1) in
           let res_idx = (adjusted_target mod cycle_size) - 1 + found_idx in
           match
-            Hashtbl.to_seq cache |> Seq.find (fun (grid, idx) -> idx = res_idx)
+            Hashtbl.to_seq cache |> Seq.find (fun (_, idx) -> idx = res_idx)
           with
           | Some (grid, _) ->
               grid
