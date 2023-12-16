@@ -51,6 +51,12 @@ let get_neighbor_idxs (row_idx, col_idx) row_length col_length =
                 else None ) )
   |> List.flatten
 
+let are_coords_valid x_coord y_coord grid =
+  x_coord >= 0
+  && x_coord < Array.length grid
+  && y_coord >= 0
+  && y_coord < Array.length grid.(0)
+
 let find_max comparator lst =
   match
     List.fold_left
