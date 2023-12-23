@@ -1,3 +1,5 @@
+type direction = FromLeft | FromRight | FromTop | FromBottom
+
 let file_to_list path =
   let file = open_in path in
   let rec read_file acc =
@@ -53,13 +55,19 @@ let get_neighbor_idxs (row_idx, col_idx) row_length col_length =
                 else None ) )
   |> List.flatten
 
-let get_neighbor_idxs_cardinal (row_idx, col_idx) row_length col_length =
-  [ (row_idx + 1, col_idx)
-  ; (row_idx - 1, col_idx)
-  ; (row_idx, col_idx + 1)
-  ; (row_idx, col_idx - 1) ]
-  |> List.filter (fun (x_coord, y_coord) ->
+let get_neighbor_idxs_cardinal_with_directions (row_idx, col_idx) row_length
+    col_length =
+  [ ((row_idx + 1, col_idx), FromLeft)
+  ; ((row_idx - 1, col_idx), FromRight)
+  ; ((row_idx, col_idx + 1), FromTop)
+  ; ((row_idx, col_idx - 1), FromBottom) ]
+  |> List.filter (fun ((x_coord, y_coord), _) ->
          is_valid_coord x_coord row_length && is_valid_coord y_coord col_length )
+
+let get_neighbor_idxs_cardinal (row_idx, col_idx) row_length col_length =
+  get_neighbor_idxs_cardinal_with_directions (row_idx, col_idx) row_length
+    col_length
+  |> List.map (fun (coords, _) -> coords)
 
 let are_coords_valid x_coord y_coord grid =
   x_coord >= 0
