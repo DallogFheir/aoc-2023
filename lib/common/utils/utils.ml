@@ -152,3 +152,9 @@ let groupby lst =
       []
   | acc, Some prev, prev_count ->
       List.rev ((prev, prev_count) :: acc)
+
+let string_repeat n string =
+  let rec string_repeat_aux n acc =
+    if n = 1 then acc else string_repeat_aux (n - 1) (acc ^ string)
+  in
+  string_repeat_aux n string

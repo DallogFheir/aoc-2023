@@ -160,20 +160,25 @@ let calculate_combinations springs damaged_counts =
   in
   calculate_combinations_aux springs damaged_counts 0
 
-let part_1_aux path =
+let solution_aux path preprocess_records =
   Utils.file_to_list path
-  |> Utils.fold_lefti
-       (fun sum idx line ->
+  |> List.fold_left
+       (fun sum line ->
          match String.split_on_char ' ' line with
          | [springs; damaged_counts] ->
+             let preprocessed_springs, preprocessed_damaged_counts =
+               preprocess_records springs damaged_counts
+             in
              sum
              + calculate_combinations
-                 (get_spring_groups springs)
-                 ( String.split_on_char ',' damaged_counts
+                 (get_spring_groups preprocessed_springs)
+                 ( String.split_on_char ',' preprocessed_damaged_counts
                  |> List.map (fun num -> int_of_string num) )
          | _ ->
              failwith ("Invalid line: " ^ line) )
        0
+
+let part_1_aux path = solution_aux path (fun x y -> (x, y))
 
 let test_1 () =
   part_1_aux "lib/day12/test.txt" |> print_int ;
@@ -181,19 +186,26 @@ let test_1 () =
 
 let part_1 () = part_1_aux "lib/day12/input.txt"
 
-(* let test_2 () =
-     part_2_aux "lib/day12/test.txt" 10 |> print_int ;
-     print_newline () ;
-     part_2_aux "lib/day12/test.txt" 100 |> print_int ;
-     print_newline ()
+let part_2_aux path =
+  solution_aux path (fun springs damaged_counts ->
+      let repeated_springs = Utils.string_repeat 5 (springs ^ "?")
+      and repeated_damaged_counts =
+        Utils.string_repeat 5 (damaged_counts ^ ",")
+      in
+      ( String.sub repeated_springs 0 (String.length repeated_springs - 1)
+      , String.sub repeated_damaged_counts 0
+          (String.length repeated_damaged_counts - 1) ) )
 
-   let part_2 () = part_2_aux "lib/day12/input.txt" 1_000_000 *)
+let test_2 () =
+  part_2_aux "lib/day12/test.txt" |> print_int ;
+  print_newline ()
+
+let part_2 () = part_2_aux "lib/day12/input.txt"
 
 let solution () =
   print_string "Part 1: " ;
   part_1 () |> print_int ;
-  print_newline ()
-(*;
+  print_newline () ;
   print_string "Part 2: " ;
   part_2 () |> print_int ;
-  print_newline () *)
+  print_newline ()
