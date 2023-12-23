@@ -1,3 +1,5 @@
+type direction = FromLeft | FromRight | FromTop | FromBottom
+
 let file_to_list path =
   let file = open_in path in
   let rec read_file acc =
@@ -34,9 +36,11 @@ let rec map2_shortest fn lst1 lst2 =
   | _, [] ->
       lst1
 
+let is_valid_coord coord ?(lower_bound = 0) upper_bound =
+  coord >= lower_bound && coord < upper_bound
+
 let get_neighbor_idxs (row_idx, col_idx) row_length col_length =
-  let addends = List.init 3 (fun idx -> idx - 1)
-  and is_valid_idx idx bound = idx >= 0 && idx < bound in
+  let addends = List.init 3 (fun idx -> idx - 1) in
   addends
   |> List.map (fun row_addend ->
          addends
@@ -45,11 +49,25 @@ let get_neighbor_idxs (row_idx, col_idx) row_length col_length =
                 and col_coord = col_idx + col_addend in
                 if
                   (not (row_addend = 0 && col_addend = 0))
-                  && is_valid_idx row_coord row_length
-                  && is_valid_idx col_coord col_length
+                  && is_valid_coord row_coord row_length
+                  && is_valid_coord col_coord col_length
                 then Some (row_coord, col_coord)
                 else None ) )
   |> List.flatten
+
+let get_neighbor_idxs_cardinal_with_directions (row_idx, col_idx) row_length
+    col_length =
+  [ ((row_idx + 1, col_idx), FromLeft)
+  ; ((row_idx - 1, col_idx), FromRight)
+  ; ((row_idx, col_idx + 1), FromTop)
+  ; ((row_idx, col_idx - 1), FromBottom) ]
+  |> List.filter (fun ((x_coord, y_coord), _) ->
+         is_valid_coord x_coord row_length && is_valid_coord y_coord col_length )
+
+let get_neighbor_idxs_cardinal (row_idx, col_idx) row_length col_length =
+  get_neighbor_idxs_cardinal_with_directions (row_idx, col_idx) row_length
+    col_length
+  |> List.map (fun (coords, _) -> coords)
 
 let are_coords_valid x_coord y_coord grid =
   x_coord >= 0
