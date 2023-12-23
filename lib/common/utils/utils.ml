@@ -135,3 +135,20 @@ let array_count_if predicate array =
   Array.fold_left
     (fun count el -> count + if predicate el then 1 else 0)
     0 array
+
+let groupby lst =
+  match
+    List.fold_left
+      (fun (acc, prev, prev_count) el ->
+        match prev with
+        | None ->
+            (acc, Some el, 1)
+        | Some v ->
+            if el = v then (acc, Some el, prev_count + 1)
+            else ((v, prev_count) :: acc, Some el, 1) )
+      ([], None, 0) lst
+  with
+  | _, None, _ ->
+      []
+  | acc, Some prev, prev_count ->
+      List.rev ((prev, prev_count) :: acc)
