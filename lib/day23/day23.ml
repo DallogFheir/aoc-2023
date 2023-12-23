@@ -8,33 +8,10 @@ let get_start_and_end map =
   | _ ->
       failwith "Start or end position not found."
 
-let find_longest_path tile_matcher map start_coords end_coords =
+let find_longest_path get_neighbors crossroads_preprocessor map start_coords
+    end_coords =
   let visited = Hashtbl.create (Array.length map * Array.length map.(0))
-  and crossroads = Hashtbl.create 100
-  and get_neighbors tile x_coord y_coord =
-    let empty_tile_handler () =
-      let orig_neighbors =
-        Utils.get_neighbor_idxs_cardinal_with_directions (x_coord, y_coord)
-          (Array.length map.(0))
-          (Array.length map)
-        |> List.filter (fun ((x_coord, y_coord), _) ->
-               map.(y_coord).(x_coord) <> '#' )
-      in
-      let filtered_neighbors =
-        orig_neighbors
-        |> List.filter (fun ((x_coord, y_coord), from_direction) ->
-               let neighbor = map.(y_coord).(x_coord) in
-               not
-                 ( (neighbor = '>' && from_direction = Utils.FromRight)
-                 || (neighbor = '<' && from_direction = Utils.FromLeft)
-                 || (neighbor = '^' && from_direction = Utils.FromTop)
-                 || (neighbor = 'v' && from_direction = Utils.FromBottom) ) )
-        |> List.map (fun (coords, _) -> coords)
-      in
-      (filtered_neighbors, List.length orig_neighbors)
-    in
-    tile_matcher empty_tile_handler tile x_coord y_coord
-  in
+  and crossroads = Hashtbl.create 100 in
   let rec take_hike queue =
     match queue with
     | [] ->
@@ -42,10 +19,10 @@ let find_longest_path tile_matcher map start_coords end_coords =
     | (((x_coord, y_coord) as coords), steps, last_crossroad) :: tail ->
         let tile = map.(y_coord).(x_coord) in
         let neighbors, all_neighbors_count =
-          get_neighbors tile x_coord y_coord
+          get_neighbors tile map x_coord y_coord
         in
         let is_crossroads = all_neighbors_count > 2 || coords = end_coords in
-        ( if is_crossroads then
+        ( if is_crossroads && coords <> last_crossroad then
             match Hashtbl.find_opt crossroads last_crossroad with
             | None ->
                 Hashtbl.replace crossroads last_crossroad [(steps, coords)]
@@ -70,25 +47,31 @@ let find_longest_path tile_matcher map start_coords end_coords =
     match queue with
     | [] ->
         max_steps
-    | (coords, steps) :: tail ->
-        if coords = end_coords then bfs tail (max steps max_steps)
-        else
+    | (coords, steps, visited_on_path) :: tail ->
+        if Hashtbl.mem visited_on_path coords then bfs tail max_steps
+        else if coords = end_coords then bfs tail (max steps max_steps)
+        else (
+          Hashtbl.replace visited_on_path coords true ;
           let neighbors =
             Hashtbl.find crossroads coords
             |> List.map (fun (path_length, neighbor_coords) ->
-                   (neighbor_coords, path_length + steps) )
+                   ( neighbor_coords
+                   , path_length + steps
+                   , Hashtbl.copy visited_on_path ) )
           in
-          bfs (neighbors @ tail) max_steps
+          bfs (neighbors @ tail) max_steps )
   in
-  bfs [(start_coords, 0)] 0
+  crossroads_preprocessor crossroads ;
+  bfs [(start_coords, 0, Hashtbl.create 100)] 0
 
-let solution_aux tile_matcher path =
+let solution_aux get_neighbors crossroads_preprocessor path =
   let map = Utils.file_to_grid path in
   let start_coords, end_coords = get_start_and_end map in
-  find_longest_path tile_matcher map start_coords end_coords
+  find_longest_path get_neighbors crossroads_preprocessor map start_coords
+    end_coords
 
 let part_1_aux path =
-  let tile_matcher empty_tile_handler tile x_coord y_coord =
+  let get_neighbors tile map x_coord y_coord =
     match tile with
     | '>' ->
         ([(x_coord + 1, y_coord)], 1)
@@ -99,11 +82,29 @@ let part_1_aux path =
     | '^' ->
         ([(x_coord, y_coord - 1)], 1)
     | '.' ->
-        empty_tile_handler ()
+        let orig_neighbors =
+          Utils.get_neighbor_idxs_cardinal_with_directions (x_coord, y_coord)
+            (Array.length map.(0))
+            (Array.length map)
+          |> List.filter (fun ((x_coord, y_coord), _) ->
+                 map.(y_coord).(x_coord) <> '#' )
+        in
+        let filtered_neighbors =
+          orig_neighbors
+          |> List.filter (fun ((x_coord, y_coord), from_direction) ->
+                 let neighbor = map.(y_coord).(x_coord) in
+                 not
+                   ( (neighbor = '>' && from_direction = Utils.FromRight)
+                   || (neighbor = '<' && from_direction = Utils.FromLeft)
+                   || (neighbor = '^' && from_direction = Utils.FromTop)
+                   || (neighbor = 'v' && from_direction = Utils.FromBottom) ) )
+          |> List.map (fun (coords, _) -> coords)
+        in
+        (filtered_neighbors, List.length orig_neighbors)
     | _ ->
         failwith ("Invalid tile: " ^ String.make 1 tile)
   in
-  solution_aux tile_matcher path
+  solution_aux get_neighbors (fun _ -> ()) path
 
 let test_1 () =
   part_1_aux "lib/day23/test.txt" |> print_int ;
@@ -112,14 +113,38 @@ let test_1 () =
 let part_1 () = part_1_aux "lib/day23/input.txt"
 
 let part_2_aux path =
-  let tile_matcher empty_tile_handler tile x_coord y_coord =
+  let get_neighbors tile map x_coord y_coord =
     match tile with
-    | '<' | '>' | '^' | 'v' | '.' ->
-        empty_tile_handler ()
+    | '>' | '<' | 'v' | '^' | '.' ->
+        let orig_neighbors =
+          Utils.get_neighbor_idxs_cardinal (x_coord, y_coord)
+            (Array.length map.(0))
+            (Array.length map)
+          |> List.filter (fun (x_coord, y_coord) ->
+                 map.(y_coord).(x_coord) <> '#' )
+        in
+        (orig_neighbors, List.length orig_neighbors)
     | _ ->
         failwith ("Invalid tile: " ^ String.make 1 tile)
+  and crossroads_preprocessor crossroads =
+    Hashtbl.iter
+      (fun coords neighbor_lst ->
+        List.iter
+          (fun (steps, neighbor_coords) ->
+            let new_neighbor_lst =
+              match Hashtbl.find_opt crossroads neighbor_coords with
+              | None ->
+                  [(steps, coords)]
+              | Some prev ->
+                  let new_neighbor = (steps, coords) in
+                  if List.mem new_neighbor prev then prev
+                  else new_neighbor :: prev
+            in
+            Hashtbl.replace crossroads neighbor_coords new_neighbor_lst )
+          neighbor_lst )
+      crossroads
   in
-  solution_aux tile_matcher path
+  solution_aux get_neighbors crossroads_preprocessor path
 
 let test_2 () =
   part_2_aux "lib/day23/test.txt" |> print_int ;
