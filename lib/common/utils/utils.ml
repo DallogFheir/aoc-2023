@@ -131,6 +131,9 @@ let reverse_array array =
   let length = Array.length array in
   Array.init length (fun idx -> array.(length - idx - 1))
 
+let list_count_if predicate array =
+  List.fold_left (fun count el -> count + if predicate el then 1 else 0) 0 array
+
 let array_count_if predicate array =
   Array.fold_left
     (fun count el -> count + if predicate el then 1 else 0)
