@@ -1,5 +1,3 @@
-type direction = FromLeft | FromRight | FromTop | FromBottom
-
 let file_to_list path =
   let file = open_in path in
   let rec read_file acc =
@@ -57,10 +55,10 @@ let get_neighbor_idxs (row_idx, col_idx) row_length col_length =
 
 let get_neighbor_idxs_cardinal_with_directions (row_idx, col_idx) row_length
     col_length =
-  [ ((row_idx + 1, col_idx), FromLeft)
-  ; ((row_idx - 1, col_idx), FromRight)
-  ; ((row_idx, col_idx + 1), FromTop)
-  ; ((row_idx, col_idx - 1), FromBottom) ]
+  [ ((row_idx + 1, col_idx), Direction.FromLeft)
+  ; ((row_idx - 1, col_idx), Direction.FromRight)
+  ; ((row_idx, col_idx + 1), Direction.FromTop)
+  ; ((row_idx, col_idx - 1), Direction.FromBottom) ]
   |> List.filter (fun ((x_coord, y_coord), _) ->
          is_valid_coord x_coord row_length && is_valid_coord y_coord col_length )
 
@@ -158,3 +156,10 @@ let string_repeat n string =
     if n = 1 then acc else string_repeat_aux (n - 1) (acc ^ string)
   in
   string_repeat_aux n string
+
+let digit_char_to_number char =
+  match char with
+  | '0' .. '9' ->
+      int_of_char char - int_of_char '0'
+  | _ ->
+      failwith (String.make 1 char ^ " is not a digit.")
