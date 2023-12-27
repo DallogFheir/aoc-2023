@@ -9,10 +9,10 @@ module PriorityMap = Map.Make (Node)
 let get_neighbors (x_coord, y_coord) count_in_straight_line from_direction grid
     steer_fn =
   let to_add =
-    [ ((-1, 0), Direction.FromLeft)
-    ; ((0, -1), Direction.FromTop)
-    ; ((1, 0), Direction.FromRight)
-    ; ((0, 1), Direction.FromBottom) ]
+    [ ((-1, 0), Direction.Left)
+    ; ((0, -1), Direction.Top)
+    ; ((1, 0), Direction.Right)
+    ; ((0, 1), Direction.Bottom) ]
     |> steer_fn count_in_straight_line from_direction
   and row_length = Array.length grid.(0)
   and col_length = Array.length grid in

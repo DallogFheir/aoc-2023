@@ -1,11 +1,11 @@
-type direction = FromLeft | FromRight | FromUp | FromDown
+type direction = Left | Right | FromUp | FromDown
 
 let get_opposite_direction direction =
   match direction with
-  | FromLeft ->
-      FromRight
-  | FromRight ->
-      FromLeft
+  | Left ->
+      Right
+  | Right ->
+      Left
   | FromUp ->
       FromDown
   | FromDown ->
@@ -13,9 +13,9 @@ let get_opposite_direction direction =
 
 let get_next_coord x_coord y_coord from_direction =
   match from_direction with
-  | FromLeft ->
+  | Left ->
       (x_coord + 1, y_coord)
-  | FromRight ->
+  | Right ->
       (x_coord - 1, y_coord)
   | FromUp ->
       (x_coord, y_coord + 1)
@@ -24,32 +24,32 @@ let get_next_coord x_coord y_coord from_direction =
 
 let get_coords_after_mirror x_coord y_coord from_direction mirror =
   match (mirror, from_direction) with
-  | '\\', FromLeft ->
+  | '\\', Left ->
       ((x_coord, y_coord + 1), FromUp)
-  | '\\', FromRight ->
+  | '\\', Right ->
       ((x_coord, y_coord - 1), FromDown)
   | '\\', FromUp ->
-      ((x_coord + 1, y_coord), FromLeft)
+      ((x_coord + 1, y_coord), Left)
   | '\\', FromDown ->
-      ((x_coord - 1, y_coord), FromRight)
-  | '/', FromLeft ->
+      ((x_coord - 1, y_coord), Right)
+  | '/', Left ->
       ((x_coord, y_coord - 1), FromDown)
-  | '/', FromRight ->
+  | '/', Right ->
       ((x_coord, y_coord + 1), FromUp)
   | '/', FromUp ->
-      ((x_coord - 1, y_coord), FromRight)
+      ((x_coord - 1, y_coord), Right)
   | '/', FromDown ->
-      ((x_coord + 1, y_coord), FromLeft)
+      ((x_coord + 1, y_coord), Left)
   | _ ->
       failwith ("Invalid mirror: " ^ String.make 1 mirror)
 
 let get_coords_after_splitter x_coord y_coord from_direction splitter =
   match (splitter, from_direction) with
-  | '-', FromLeft | '-', FromRight | '|', FromDown | '|', FromUp ->
+  | '-', Left | '-', Right | '|', FromDown | '|', FromUp ->
       [(get_next_coord x_coord y_coord from_direction, from_direction)]
   | '-', FromUp | '-', FromDown ->
-      [((x_coord - 1, y_coord), FromRight); ((x_coord + 1, y_coord), FromLeft)]
-  | '|', FromLeft | '|', FromRight ->
+      [((x_coord - 1, y_coord), Right); ((x_coord + 1, y_coord), Left)]
+  | '|', Left | '|', Right ->
       [((x_coord, y_coord - 1), FromDown); ((x_coord, y_coord + 1), FromUp)]
   | _ ->
       failwith ("Invalid splitter: " ^ String.make 1 splitter)
@@ -111,7 +111,7 @@ let get_energized_tiles start_point start_direction grid =
   light_beams |> Hashtbl.to_seq_keys
 
 let part_1_aux path =
-  Utils.file_to_grid path |> get_energized_tiles (0, 0) FromLeft |> Seq.length
+  Utils.file_to_grid path |> get_energized_tiles (0, 0) Left |> Seq.length
 
 let test_1 () =
   part_1_aux "lib/day16/test.txt" |> print_int ;
@@ -124,9 +124,8 @@ let part_2_aux path =
   let row_length = Array.length grid.(0) and col_length = Array.length grid in
   let rows =
     List.init (Array.length grid) (fun idx ->
-        [ get_energized_tiles (0, idx) FromLeft grid |> Seq.length
-        ; get_energized_tiles (row_length - 1, idx) FromRight grid |> Seq.length
-        ] )
+        [ get_energized_tiles (0, idx) Left grid |> Seq.length
+        ; get_energized_tiles (row_length - 1, idx) Right grid |> Seq.length ] )
     |> List.flatten
   and columns =
     List.init

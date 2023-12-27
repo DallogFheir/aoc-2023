@@ -55,10 +55,10 @@ let get_neighbor_idxs (row_idx, col_idx) row_length col_length =
 
 let get_neighbor_idxs_cardinal_with_directions (row_idx, col_idx) row_length
     col_length =
-  [ ((row_idx + 1, col_idx), Direction.FromLeft)
-  ; ((row_idx - 1, col_idx), Direction.FromRight)
-  ; ((row_idx, col_idx + 1), Direction.FromTop)
-  ; ((row_idx, col_idx - 1), Direction.FromBottom) ]
+  [ ((row_idx + 1, col_idx), Direction.Left)
+  ; ((row_idx - 1, col_idx), Direction.Right)
+  ; ((row_idx, col_idx + 1), Direction.Top)
+  ; ((row_idx, col_idx - 1), Direction.Bottom) ]
   |> List.filter (fun ((x_coord, y_coord), _) ->
          is_valid_coord x_coord row_length && is_valid_coord y_coord col_length )
 
