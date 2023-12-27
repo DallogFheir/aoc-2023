@@ -94,11 +94,10 @@ let part_1_aux path =
           |> List.filter (fun ((x_coord, y_coord), from_direction) ->
                  let neighbor = map.(y_coord).(x_coord) in
                  not
-                   ( (neighbor = '>' && from_direction = Direction.FromRight)
-                   || (neighbor = '<' && from_direction = Direction.FromLeft)
-                   || (neighbor = '^' && from_direction = Direction.FromTop)
-                   || (neighbor = 'v' && from_direction = Direction.FromBottom)
-                   ) )
+                   ( (neighbor = '>' && from_direction = Direction.Right)
+                   || (neighbor = '<' && from_direction = Direction.Left)
+                   || (neighbor = '^' && from_direction = Direction.Up)
+                   || (neighbor = 'v' && from_direction = Direction.Down) ) )
           |> List.map (fun (coords, _) -> coords)
         in
         (filtered_neighbors, List.length orig_neighbors)

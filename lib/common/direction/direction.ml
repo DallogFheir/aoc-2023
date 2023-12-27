@@ -1,12 +1,4 @@
-type direction = FromLeft | FromRight | FromTop | FromBottom
+type direction = Left | Right | Up | Down
 
 let get_opposite_direction dir =
-  match dir with
-  | FromLeft ->
-      FromRight
-  | FromRight ->
-      FromLeft
-  | FromTop ->
-      FromBottom
-  | FromBottom ->
-      FromTop
+  match dir with Left -> Right | Right -> Left | Up -> Down | Down -> Up
