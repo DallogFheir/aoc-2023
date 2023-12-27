@@ -96,8 +96,8 @@ let part_1_aux path =
                  not
                    ( (neighbor = '>' && from_direction = Direction.Right)
                    || (neighbor = '<' && from_direction = Direction.Left)
-                   || (neighbor = '^' && from_direction = Direction.Top)
-                   || (neighbor = 'v' && from_direction = Direction.Bottom) ) )
+                   || (neighbor = '^' && from_direction = Direction.Up)
+                   || (neighbor = 'v' && from_direction = Direction.Down) ) )
           |> List.map (fun (coords, _) -> coords)
         in
         (filtered_neighbors, List.length orig_neighbors)
