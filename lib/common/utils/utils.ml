@@ -163,3 +163,6 @@ let digit_char_to_number char =
       int_of_char char - int_of_char '0'
   | _ ->
       failwith (String.make 1 char ^ " is not a digit.")
+
+let option_get opt =
+  match opt with Some v -> v | None -> failwith "Option is None."
