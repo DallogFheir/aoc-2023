@@ -34,9 +34,11 @@ let rec map2_shortest fn lst1 lst2 =
   | _, [] ->
       lst1
 
+let is_valid_coord coord ?(lower_bound = 0) upper_bound =
+  coord >= lower_bound && coord < upper_bound
+
 let get_neighbor_idxs (row_idx, col_idx) row_length col_length =
-  let addends = List.init 3 (fun idx -> idx - 1)
-  and is_valid_idx idx bound = idx >= 0 && idx < bound in
+  let addends = List.init 3 (fun idx -> idx - 1) in
   addends
   |> List.map (fun row_addend ->
          addends
@@ -45,11 +47,25 @@ let get_neighbor_idxs (row_idx, col_idx) row_length col_length =
                 and col_coord = col_idx + col_addend in
                 if
                   (not (row_addend = 0 && col_addend = 0))
-                  && is_valid_idx row_coord row_length
-                  && is_valid_idx col_coord col_length
+                  && is_valid_coord row_coord row_length
+                  && is_valid_coord col_coord col_length
                 then Some (row_coord, col_coord)
                 else None ) )
   |> List.flatten
+
+let get_neighbor_idxs_cardinal_with_directions (row_idx, col_idx) row_length
+    col_length =
+  [ ((row_idx + 1, col_idx), Direction.Left)
+  ; ((row_idx - 1, col_idx), Direction.Right)
+  ; ((row_idx, col_idx + 1), Direction.Up)
+  ; ((row_idx, col_idx - 1), Direction.Down) ]
+  |> List.filter (fun ((x_coord, y_coord), _) ->
+         is_valid_coord x_coord row_length && is_valid_coord y_coord col_length )
+
+let get_neighbor_idxs_cardinal (row_idx, col_idx) row_length col_length =
+  get_neighbor_idxs_cardinal_with_directions (row_idx, col_idx) row_length
+    col_length
+  |> List.map (fun (coords, _) -> coords)
 
 let are_coords_valid x_coord y_coord grid =
   x_coord >= 0
@@ -117,3 +133,33 @@ let array_count_if predicate array =
   Array.fold_left
     (fun count el -> count + if predicate el then 1 else 0)
     0 array
+
+let groupby lst =
+  match
+    List.fold_left
+      (fun (acc, prev, prev_count) el ->
+        match prev with
+        | None ->
+            (acc, Some el, 1)
+        | Some v ->
+            if el = v then (acc, Some el, prev_count + 1)
+            else ((v, prev_count) :: acc, Some el, 1) )
+      ([], None, 0) lst
+  with
+  | _, None, _ ->
+      []
+  | acc, Some prev, prev_count ->
+      List.rev ((prev, prev_count) :: acc)
+
+let string_repeat n string =
+  let rec string_repeat_aux n acc =
+    if n = 1 then acc else string_repeat_aux (n - 1) (acc ^ string)
+  in
+  string_repeat_aux n string
+
+let digit_char_to_number char =
+  match char with
+  | '0' .. '9' ->
+      int_of_char char - int_of_char '0'
+  | _ ->
+      failwith (String.make 1 char ^ " is not a digit.")
