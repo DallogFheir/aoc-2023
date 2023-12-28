@@ -113,6 +113,7 @@ let test_1 () =
 let part_1 () = part_1_aux "lib/day20/input.txt"
 
 let solution () =
+  print_endline "DAY 20" ;
   print_string "Part 1: " ;
   part_1 () |> print_int ;
   print_newline ()
