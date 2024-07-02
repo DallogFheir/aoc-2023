@@ -166,3 +166,12 @@ let digit_char_to_number char =
 
 let option_get opt =
   match opt with Some v -> v | None -> failwith "Option is None."
+
+let rec get_at_index idx seq =
+  if idx < 0 then failwith "Index cannot be negative."
+  else
+    match seq () with
+    | Seq.Cons (head, tail) ->
+        if idx = 0 then head else get_at_index (idx - 1) tail
+    | Seq.Nil ->
+        failwith "Index out of bounds."
