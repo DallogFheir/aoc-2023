@@ -158,3 +158,12 @@ let string_repeat n string =
     if n = 1 then acc else string_repeat_aux (n - 1) (acc ^ string)
   in
   string_repeat_aux n string
+
+let rec get_at_index idx seq =
+  if idx < 0 then failwith "Index cannot be negative."
+  else
+    match seq () with
+    | Seq.Cons (head, tail) ->
+        if idx = 0 then head else get_at_index (idx - 1) tail
+    | Seq.Nil ->
+        failwith "Index out of bounds."
