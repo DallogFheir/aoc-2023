@@ -128,6 +128,32 @@ let create_mermaid () =
              failwith ("Invalid input: " ^ line) )
        "flowchart TD\n"
 
+let get_subgraph end_module modules =
+  let modules_seq = Hashtbl.to_seq modules
+  and already_seen = Hashtbl.create 20 in
+  let rec get_subgraph_aux queue =
+    match queue with
+    | head :: tail ->
+        if Hashtbl.mem already_seen head then get_subgraph_aux tail
+        else (
+          Hashtbl.add already_seen head true ;
+          modules_seq
+          |> Seq.fold_left
+               (fun acc (module_name, module_info) ->
+                 match module_info with
+                 | FlipFlop (_, outputs) | Conjunction (_, outputs) ->
+                     if List.mem head outputs then acc @ (module_name :: outputs)
+                     else acc
+                 | _ ->
+                     acc )
+               tail
+          |> get_subgraph_aux )
+    | _ ->
+        already_seen
+  in
+  Hashtbl.add already_seen "broadcaster" true ;
+  get_subgraph_aux [end_module]
+
 let test_1 () =
   part_1_aux "lib/day20/test1.txt" |> print_int ;
   print_newline () ;
@@ -136,11 +162,19 @@ let test_1 () =
 
 let part_1 () = part_1_aux "lib/day20/input.txt"
 
+let eda () = create_mermaid () |> print_string
+
+let part_2 () =
+  Utils.file_to_list "lib/day20/input.txt"
+  |> parse_input |> get_subgraph "pr" |> Hashtbl.to_seq_keys |> List.of_seq
+  |> List.sort (fun x y -> if x > y then 1 else -1)
+  |> List.iter (fun modd -> print_endline modd) ;
+  2
+
 let solution () =
   print_string "Part 1: " ;
   part_1 () |> print_int ;
   print_newline () ;
-  create_mermaid () |> print_string
-(*print_string "Part 2: " ;
+  print_string "Part 2: " ;
   part_2 () |> print_int ;
-  print_newline () *)
+  print_newline ()
