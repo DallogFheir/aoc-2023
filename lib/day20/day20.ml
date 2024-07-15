@@ -6,15 +6,15 @@ type communication_module =
   | Broadcast of string list
   | Untyped
 
+let get_module_name module_info =
+  if module_info.[0] = '%' || module_info.[0] = '&' then
+    String.sub module_info 1 (String.length module_info - 1)
+  else module_info
+
 let parse_input lines =
   let module_to_outputs = Hashtbl.create (List.length lines)
   and module_to_inputs = Hashtbl.create (List.length lines)
-  and parsed_modules = Hashtbl.create (List.length lines)
-  and get_module_name module_info =
-    if module_info.[0] = '%' || module_info.[0] = '&' then
-      String.sub module_info 1 (String.length module_info - 1)
-    else module_info
-  in
+  and parsed_modules = Hashtbl.create (List.length lines) in
   lines
   |> List.map (fun line ->
          match Str.split (Str.regexp {| -> |}) line with
@@ -104,6 +104,30 @@ let press_button button_presses modules =
 let part_1_aux path =
   Utils.file_to_list path |> parse_input |> press_button 1000
 
+let create_mermaid () =
+  Utils.file_to_list "lib/day20/input.txt"
+  |> List.fold_left
+       (fun acc line ->
+         match Str.split (Str.regexp {| -> |}) line with
+         | [module_info; outputs_str] ->
+             let module_name = get_module_name module_info in
+             let module_suffix =
+               if module_info.[0] = '%' then "((" ^ module_name ^ "))"
+               else if module_info.[0] = '&' then ""
+               else if module_info = "broadcaster" then "{" ^ module_name ^ "}"
+               else failwith ("Invalid module " ^ module_info)
+             in
+             let module_node = module_name ^ module_suffix
+             and outputs = Str.split (Str.regexp {|, |}) outputs_str in
+             outputs
+             |> List.fold_left
+                  (fun acc output ->
+                    acc ^ "  " ^ module_node ^ " --> " ^ output ^ "\n" )
+                  acc
+         | _ ->
+             failwith ("Invalid input: " ^ line) )
+       "flowchart TD\n"
+
 let test_1 () =
   part_1_aux "lib/day20/test1.txt" |> print_int ;
   print_newline () ;
@@ -115,7 +139,8 @@ let part_1 () = part_1_aux "lib/day20/input.txt"
 let solution () =
   print_string "Part 1: " ;
   part_1 () |> print_int ;
-  print_newline ()
+  print_newline () ;
+  create_mermaid () |> print_string
 (*print_string "Part 2: " ;
   part_2 () |> print_int ;
   print_newline () *)
