@@ -55,20 +55,27 @@ let parse_input lines =
            outputs ) ;
   parsed_modules
 
-let press_button button_presses modules =
+let press_button ?(do_save_queue_idx = fun modules -> false) button_presses
+    modules =
   let button_press_queue = [("broadcaster", "button", Low)] in
-  let rec press_button_aux button_presses queue low_total high_total =
-    if button_presses = 0 then (low_total, high_total, modules)
+  let rec press_button_aux button_presses queue low_total high_total queue_idx
+      saved_queue_idxs =
+    if button_presses = 0 then (low_total, high_total, modules, saved_queue_idxs)
     else
       match queue with
       | [] ->
           press_button_aux (button_presses - 1) button_press_queue low_total
-            high_total
+            high_total 0 saved_queue_idxs
       | (receiver_name, sender_name, signal) :: tail -> (
+          let new_saved_queue_idxs =
+            if do_save_queue_idx modules then queue_idx :: saved_queue_idxs
+            else saved_queue_idxs
+          in
           let receiver_opt = Hashtbl.find_opt modules receiver_name in
           match receiver_opt with
           | None ->
               press_button_aux button_presses tail low_total high_total
+                (queue_idx + 1) new_saved_queue_idxs
           | Some receiver ->
               let new_low_total = low_total + if signal = Low then 1 else 0
               and new_high_total = high_total + if signal = High then 1 else 0
@@ -103,12 +110,12 @@ let press_button button_presses modules =
                     []
               in
               press_button_aux button_presses (tail @ new_queue) new_low_total
-                new_high_total )
+                new_high_total (queue_idx + 1) new_saved_queue_idxs )
   in
-  press_button_aux button_presses button_press_queue 0 0
+  press_button_aux button_presses button_press_queue 0 0 0 []
 
 let part_1_aux path =
-  let low_total, high_total, _ =
+  let low_total, high_total, _, _ =
     Utils.file_to_list path |> parse_input |> press_button 1000
   in
   low_total * high_total
@@ -177,25 +184,26 @@ let find_low_pulses target graph =
   let rec find_low_pulses_aux res history idx =
     match history with
     | last_state :: _ -> (
-        let _, _, new_state = press_button 1 (Hashtbl.copy last_state) in
-        let target_inputs = Hashtbl.find new_state target in
+        let _, _, new_state, correct_queue_idxs =
+          press_button 1 (Hashtbl.copy last_state)
+            ~do_save_queue_idx:(fun modules ->
+              match Hashtbl.find modules target with
+              | Conjunction (inputs, _) ->
+                  Hashtbl.to_seq_values inputs
+                  |> Seq.for_all (fun pulse -> pulse = High)
+              | _ ->
+                  failwith "Target should be a conjunction module." )
+        in
         let new_res =
-          match target_inputs with
-          | Conjunction (inputs, _) ->
-              if
-                Hashtbl.to_seq inputs
-                |> Seq.for_all (fun (_, pulse) -> pulse = High)
-              then idx :: res
-              else res
-          | _ ->
-              failwith "Target should be a conjunction module."
+          List.map (fun queue_idx -> (idx + 1, queue_idx)) correct_queue_idxs
+          @ res
         in
         let already_idx_opt =
           List.find_index (fun state -> state = new_state) history
         in
         match already_idx_opt with
         | Some already_idx ->
-            (res, already_idx)
+            (new_res, already_idx + 1)
         | None ->
             find_low_pulses_aux new_res (new_state :: history) (idx + 1) )
     | _ ->
@@ -213,18 +221,77 @@ let part_1 () = part_1_aux "lib/day20/input.txt"
 
 let eda () = create_mermaid () |> print_string
 
+let prime_factorize num =
+  let rec prime_factorize_aux num factor factors =
+    if num = 1 then factors
+    else if num mod factor = 0 then (
+      ( match Hashtbl.find_opt factors factor with
+      | Some count ->
+          Hashtbl.replace factors factor (count + 1)
+      | None ->
+          Hashtbl.replace factors factor 1 ) ;
+      prime_factorize_aux (num / factor) factor factors )
+    else prime_factorize_aux num (factor + 1) factors
+  in
+  prime_factorize_aux num 2 (Hashtbl.create 10)
+
+let find_lcm num_lst =
+  let lcm_factors = Hashtbl.create (List.length num_lst) in
+  List.iter
+    (fun num ->
+      let factors = prime_factorize num in
+      Hashtbl.to_seq factors
+      |> Seq.iter (fun (factor, count) ->
+             match Hashtbl.find_opt lcm_factors factor with
+             | Some lcm_count ->
+                 Hashtbl.replace lcm_factors factor
+                   (if count > lcm_count then count else lcm_count)
+             | None ->
+                 Hashtbl.replace lcm_factors factor count ) )
+    num_lst ;
+  Hashtbl.to_seq lcm_factors
+  |> Seq.fold_left
+       (fun acc (factor, count) ->
+         acc * int_of_float (float_of_int factor ** float_of_int count) )
+       1
+
 let part_2 () =
   let graph = Utils.file_to_list "lib/day20/input.txt" |> parse_input
   and nodes = ["jv"; "qs"; "jm"; "pr"] in
   let res =
     nodes
-    |> List.fold_left
-         (fun acc node ->
-           let _, cycle = graph |> get_subgraph node |> find_low_pulses node in
-           acc * (cycle + 1) )
-         1
+    |> List.map (fun node ->
+           graph |> get_subgraph node |> find_low_pulses node )
   in
-  print_int res
+  let queue_idxs = Hashtbl.create 10 in
+  res
+  |> List.iter (fun (all_high_pulses_idxs, _) ->
+         List.iter
+           (fun (press_idx, queue_idx) ->
+             match Hashtbl.find_opt queue_idxs queue_idx with
+             | Some press_idxs ->
+                 Hashtbl.replace queue_idxs queue_idx (press_idx :: press_idxs)
+             | None ->
+                 Hashtbl.replace queue_idxs queue_idx [press_idx] )
+           all_high_pulses_idxs ) ;
+  match
+    Hashtbl.to_seq_values queue_idxs
+    |> Seq.fold_left
+         (fun acc cycle_lengths ->
+           if List.length cycle_lengths <> List.length nodes then acc
+           else
+             let lcm = find_lcm cycle_lengths in
+             match acc with
+             | Some min ->
+                 if lcm < min then Some lcm else Some min
+             | None ->
+                 Some lcm )
+         None
+  with
+  | Some min ->
+      print_int min
+  | None ->
+      failwith "Did not find minimum."
 
 let solution () =
   print_string "Part 1: " ;
