@@ -58,51 +58,60 @@ let parse_input lines =
 let press_button button_presses modules =
   let button_press_queue = [("broadcaster", "button", Low)] in
   let rec press_button_aux button_presses queue low_total high_total =
-    if button_presses = 0 then low_total * high_total
+    if button_presses = 0 then (low_total, high_total, modules)
     else
       match queue with
       | [] ->
           press_button_aux (button_presses - 1) button_press_queue low_total
             high_total
-      | (receiver_name, sender_name, signal) :: tail ->
-          let receiver = Hashtbl.find modules receiver_name in
-          let new_low_total = low_total + if signal = Low then 1 else 0
-          and new_high_total = high_total + if signal = High then 1 else 0
-          and new_queue =
-            match receiver with
-            | FlipFlop (on, outputs) ->
-                if signal = High then []
-                else (
-                  Hashtbl.replace modules receiver_name
-                    (FlipFlop (not on, outputs)) ;
-                  List.map
-                    (fun output ->
-                      (output, receiver_name, if on then Low else High) )
-                    outputs )
-            | Conjunction (inputs, outputs) ->
-                Hashtbl.replace inputs sender_name signal ;
-                let signal_to_send =
-                  if
-                    Hashtbl.to_seq_values inputs
-                    |> Seq.for_all (fun input_signal -> input_signal = High)
-                  then Low
-                  else High
-                in
-                List.map
-                  (fun output -> (output, receiver_name, signal_to_send))
-                  outputs
-            | Broadcast outputs ->
-                List.map (fun output -> (output, receiver_name, signal)) outputs
-            | Untyped ->
-                []
-          in
-          press_button_aux button_presses (tail @ new_queue) new_low_total
-            new_high_total
+      | (receiver_name, sender_name, signal) :: tail -> (
+          let receiver_opt = Hashtbl.find_opt modules receiver_name in
+          match receiver_opt with
+          | None ->
+              press_button_aux button_presses tail low_total high_total
+          | Some receiver ->
+              let new_low_total = low_total + if signal = Low then 1 else 0
+              and new_high_total = high_total + if signal = High then 1 else 0
+              and new_queue =
+                match receiver with
+                | FlipFlop (on, outputs) ->
+                    if signal = High then []
+                    else (
+                      Hashtbl.replace modules receiver_name
+                        (FlipFlop (not on, outputs)) ;
+                      List.map
+                        (fun output ->
+                          (output, receiver_name, if on then Low else High) )
+                        outputs )
+                | Conjunction (inputs, outputs) ->
+                    Hashtbl.replace inputs sender_name signal ;
+                    let signal_to_send =
+                      if
+                        Hashtbl.to_seq_values inputs
+                        |> Seq.for_all (fun input_signal -> input_signal = High)
+                      then Low
+                      else High
+                    in
+                    List.map
+                      (fun output -> (output, receiver_name, signal_to_send))
+                      outputs
+                | Broadcast outputs ->
+                    List.map
+                      (fun output -> (output, receiver_name, signal))
+                      outputs
+                | Untyped ->
+                    []
+              in
+              press_button_aux button_presses (tail @ new_queue) new_low_total
+                new_high_total )
   in
   press_button_aux button_presses button_press_queue 0 0
 
 let part_1_aux path =
-  Utils.file_to_list path |> parse_input |> press_button 1000
+  let low_total, high_total, _ =
+    Utils.file_to_list path |> parse_input |> press_button 1000
+  in
+  low_total * high_total
 
 let create_mermaid () =
   Utils.file_to_list "lib/day20/input.txt"
@@ -134,9 +143,10 @@ let get_subgraph end_module modules =
   let rec get_subgraph_aux queue =
     match queue with
     | head :: tail ->
-        if Hashtbl.mem already_seen head then get_subgraph_aux tail
+        if Hashtbl.mem already_seen head || head = "broadcaster" then
+          get_subgraph_aux tail
         else (
-          Hashtbl.add already_seen head true ;
+          Hashtbl.add already_seen head (Hashtbl.find modules head) ;
           modules_seq
           |> Seq.fold_left
                (fun acc (module_name, module_info) ->
@@ -149,10 +159,49 @@ let get_subgraph end_module modules =
                tail
           |> get_subgraph_aux )
     | _ ->
+        ( match Hashtbl.find modules "broadcaster" with
+        | Broadcast outputs ->
+            let new_outputs =
+              List.filter
+                (fun output -> Hashtbl.mem already_seen output)
+                outputs
+            in
+            Hashtbl.replace already_seen "broadcaster" (Broadcast new_outputs)
+        | _ ->
+            failwith "Broadcaster is not a broadcaster." ) ;
         already_seen
   in
-  Hashtbl.add already_seen "broadcaster" true ;
   get_subgraph_aux [end_module]
+
+let find_low_pulses target graph =
+  let rec find_low_pulses_aux res history idx =
+    match history with
+    | last_state :: _ -> (
+        let _, _, new_state = press_button 1 (Hashtbl.copy last_state) in
+        let target_inputs = Hashtbl.find new_state target in
+        let new_res =
+          match target_inputs with
+          | Conjunction (inputs, _) ->
+              if
+                Hashtbl.to_seq inputs
+                |> Seq.for_all (fun (_, pulse) -> pulse = High)
+              then idx :: res
+              else res
+          | _ ->
+              failwith "Target should be a conjunction module."
+        in
+        let already_idx_opt =
+          List.find_index (fun state -> state = new_state) history
+        in
+        match already_idx_opt with
+        | Some already_idx ->
+            (res, already_idx)
+        | None ->
+            find_low_pulses_aux new_res (new_state :: history) (idx + 1) )
+    | _ ->
+        failwith "Empty history."
+  in
+  find_low_pulses_aux [] [graph] 0
 
 let test_1 () =
   part_1_aux "lib/day20/test1.txt" |> print_int ;
@@ -165,16 +214,22 @@ let part_1 () = part_1_aux "lib/day20/input.txt"
 let eda () = create_mermaid () |> print_string
 
 let part_2 () =
-  Utils.file_to_list "lib/day20/input.txt"
-  |> parse_input |> get_subgraph "pr" |> Hashtbl.to_seq_keys |> List.of_seq
-  |> List.sort (fun x y -> if x > y then 1 else -1)
-  |> List.iter (fun modd -> print_endline modd) ;
-  2
+  let graph = Utils.file_to_list "lib/day20/input.txt" |> parse_input
+  and nodes = ["jv"; "qs"; "jm"; "pr"] in
+  let res =
+    nodes
+    |> List.fold_left
+         (fun acc node ->
+           let _, cycle = graph |> get_subgraph node |> find_low_pulses node in
+           acc * (cycle + 1) )
+         1
+  in
+  print_int res
 
 let solution () =
   print_string "Part 1: " ;
   part_1 () |> print_int ;
   print_newline () ;
   print_string "Part 2: " ;
-  part_2 () |> print_int ;
+  part_2 () ;
   print_newline ()
