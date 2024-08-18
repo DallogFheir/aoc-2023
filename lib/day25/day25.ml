@@ -129,6 +129,7 @@ let test_1 () = part_1_aux "lib/day25/test.txt"
 let part_1 () = part_1_aux "lib/day25/input.txt"
 
 let solution () =
+  print_endline "DAY 25" ;
   print_string "Part 1: " ;
   part_1 () |> print_int ;
   print_newline ()

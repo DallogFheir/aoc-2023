@@ -1,7 +1,7 @@
 type spring_group = Damaged of int | Unknown of int | Operational
 
 let get_spring_groups spring_str =
-  spring_str |> String.to_seq |> List.of_seq |> Utils.groupby
+  spring_str |> String.to_seq |> List.of_seq |> Utils.groupby_with_counts
   |> List.map (fun (spring, count) ->
          match spring with
          | '#' ->
