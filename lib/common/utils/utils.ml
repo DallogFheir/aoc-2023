@@ -117,3 +117,16 @@ let array_count_if predicate array =
   Array.fold_left
     (fun count el -> count + if predicate el then 1 else 0)
     0 array
+
+let groupby grouper seq =
+  Seq.fold_left
+    (fun acc el ->
+      (let group = grouper el in
+       match Hashtbl.find_opt acc group with
+       | Some group_lst ->
+           Hashtbl.replace acc group (el :: group_lst)
+       | None ->
+           Hashtbl.replace acc group [el] ) ;
+      acc )
+    (Hashtbl.create (Seq.length seq / 2))
+    seq
