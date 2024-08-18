@@ -70,8 +70,27 @@ let simulate_fall bricks =
   in
   simulate_fall_aux bricks
 
-let find_safe_to_disintegrate bricks =
-  let safe_to_disintegrate = Hashtbl.create (Hashtbl.length bricks)
+let find_supporting_bricks bricks =
+  let bricks_to_supporting_bricks = Hashtbl.create (Hashtbl.length bricks)
+  and coords_by_brick =
+    Hashtbl.to_seq bricks |> Utils.groupby (fun (_, brick_idx) -> brick_idx)
+  in
+  coords_by_brick |> Hashtbl.to_seq
+  |> Seq.iter (fun (brick_idx, brick_lst) ->
+         let supporting_bricks = Hashtbl.create (List.length brick_lst) in
+         List.iter
+           (fun ((x, y, z), _) ->
+             match Hashtbl.find_opt bricks (x, y, z - 1) with
+             | Some supporting_brick when supporting_brick <> brick_idx ->
+                 Hashtbl.replace supporting_bricks supporting_brick true
+             | _ ->
+                 () )
+           brick_lst ;
+         Hashtbl.replace bricks_to_supporting_bricks brick_idx supporting_bricks ) ;
+  bricks_to_supporting_bricks
+
+let find_supported_bricks bricks =
+  let bricks_to_supported_bricks = Hashtbl.create (Hashtbl.length bricks)
   and coords_by_brick =
     Hashtbl.to_seq bricks |> Utils.groupby (fun (_, brick_idx) -> brick_idx)
   in
@@ -86,27 +105,39 @@ let find_safe_to_disintegrate bricks =
              | _ ->
                  () )
            brick_lst ;
-         if
+         let supported_bricks =
            Hashtbl.to_seq_keys supported_bricks
-           |> Seq.for_all (fun (supported_brick, height) ->
-                  not
-                    ( Hashtbl.find coords_by_brick supported_brick
+           |> Seq.map (fun (supported_brick, height) ->
+                  let is_only_supporting =
+                    Hashtbl.find coords_by_brick supported_brick
                     |> List.filter (fun ((_, _, z), _) -> z = height)
                     |> List.for_all (fun ((x, y, z), _) ->
                            match Hashtbl.find_opt bricks (x, y, z - 1) with
                            | Some supporting_brick ->
                                supporting_brick = brick_idx
                            | None ->
-                               true ) ) )
-         then Hashtbl.replace safe_to_disintegrate brick_idx true ) ;
-  safe_to_disintegrate
+                               true )
+                  in
+                  (supported_brick, is_only_supporting) )
+         in
+         Hashtbl.replace bricks_to_supported_bricks brick_idx supported_bricks ) ;
+  bricks_to_supported_bricks
+
+let count_safe_to_disintegrate bricks =
+  find_supported_bricks bricks
+  |> Hashtbl.to_seq
+  |> Seq.filter (fun (_, supported_bricks) ->
+         Seq.filter
+           (fun (_, is_only_supporting) -> is_only_supporting)
+           supported_bricks
+         |> Seq.length = 0 )
+  |> Seq.length
+
+let count_how_many_would_fall bricks = find_supported_bricks bricks
 
 let part_1_aux path =
-  let bricks =
-    Utils.file_to_list path |> parse_bricks |> simulate_fall
-    |> find_safe_to_disintegrate
-  in
-  Hashtbl.length bricks
+  Utils.file_to_list path |> parse_bricks |> simulate_fall
+  |> count_safe_to_disintegrate
 
 let test_1 () =
   part_1_aux "lib/day22/test.txt" |> print_int ;
@@ -114,10 +145,63 @@ let test_1 () =
 
 let part_1 () = part_1_aux "lib/day22/input.txt"
 
+let perform_chain_reaction bricks_to_supported bricks_to_supporting
+    brick_to_remove =
+  let visited = Hashtbl.create (Hashtbl.length bricks_to_supported) in
+  let rec bfs queue count =
+    match queue with
+    | head :: tail ->
+        let visited_count =
+          match Hashtbl.find_opt visited head with
+          | Some visited_count ->
+              Hashtbl.replace visited head (visited_count + 1) ;
+              visited_count + 1
+          | None ->
+              Hashtbl.replace visited head 1 ;
+              1
+        in
+        let to_visit_count =
+          Hashtbl.length (Hashtbl.find bricks_to_supporting head)
+        in
+        if visited_count >= to_visit_count then
+          bfs
+            ( ( Hashtbl.find bricks_to_supported head
+              |> List.of_seq
+              |> List.map (fun (brick, _) -> brick) )
+            @ tail )
+            (count + 1)
+        else bfs tail count
+    | [] ->
+        count
+  in
+  bfs
+    ( Hashtbl.find bricks_to_supported brick_to_remove
+    |> List.of_seq
+    |> List.map (fun (brick, _) -> brick) )
+    0
+
+let part_2_aux path =
+  let bricks = Utils.file_to_list path |> parse_bricks |> simulate_fall in
+  let bricks_to_supported = find_supported_bricks bricks
+  and bricks_to_supporting = find_supporting_bricks bricks in
+  bricks_to_supported |> Hashtbl.to_seq
+  |> Seq.fold_left
+       (fun count (brick_idx, supported_seq) ->
+         perform_chain_reaction bricks_to_supported bricks_to_supporting
+           brick_idx
+         + count )
+       0
+
+let test_2 () =
+  part_2_aux "lib/day22/test.txt" |> print_int ;
+  print_newline ()
+
+let part_2 () = part_2_aux "lib/day22/input.txt"
+
 let solution () =
   print_string "Part 1: " ;
-  part_1 () |> print_int
-(* print_newline () ;
-   print_string "Part 2: " ;
-   part_2 () |> print_int ;
-   print_newline () *)
+  part_1 () |> print_int ;
+  print_newline () ;
+  print_string "Part 2: " ;
+  part_2 () |> print_int ;
+  print_newline ()
