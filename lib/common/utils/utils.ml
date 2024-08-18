@@ -117,3 +117,7 @@ let array_count_if predicate array =
   Array.fold_left
     (fun count el -> count + if predicate el then 1 else 0)
     0 array
+
+let truemod dividend divisor =
+  let dividend_f = float_of_int dividend and divisor_f = float_of_int divisor in
+  dividend_f -. (divisor_f *. floor (dividend_f /. divisor_f)) |> int_of_float
