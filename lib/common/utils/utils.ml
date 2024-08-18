@@ -134,7 +134,7 @@ let array_count_if predicate array =
     (fun count el -> count + if predicate el then 1 else 0)
     0 array
 
-let groupby lst =
+let groupby_with_counts lst =
   match
     List.fold_left
       (fun (acc, prev, prev_count) el ->

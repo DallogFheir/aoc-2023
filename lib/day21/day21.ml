@@ -88,6 +88,7 @@ let part_2_aux path steps =
 let part_2 () = part_2_aux "lib/day21/input.txt" 26501365
 
 let solution () =
+  print_endline "DAY 21" ;
   print_string "Part 1: " ;
   part_1 () |> print_int ;
   print_newline () ;
