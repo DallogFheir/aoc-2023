@@ -1,0 +1,8 @@
+&kj = sends low if it receives high from all of &ln, &dr, &zx, &vn
+
+&ln gets pulse from &jv
+&dr gets pulse from &qs
+&zx gets pulse from &jm
+&vn gets pulse from &pr
+
+they all have to get low pulse

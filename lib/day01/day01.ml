@@ -83,6 +83,7 @@ let part_2 () =
   runner find_first_and_last_digit_with_words "lib/day01/input.txt"
 
 let solution () =
+  print_endline "DAY 1" ;
   print_string "Part 1: " ;
   part_1 () |> print_int ;
   print_newline () ;
