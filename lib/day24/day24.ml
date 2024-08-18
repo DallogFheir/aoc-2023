@@ -44,7 +44,7 @@ let find_how_many_intersect test_area_min test_area_max hailstones =
   in
   find_how_many_intersect_aux hailstones 0
 
-let part_1_aux path test_area_min test_area_max =
+let parse_hailstones path =
   Utils.file_to_list path
   |> List.map (fun line ->
          match Str.split (Str.regexp {| @ |}) line with
@@ -72,7 +72,59 @@ let part_1_aux path test_area_min test_area_max =
              (coords, velocities, get_linear_function coords velocities)
          | _ ->
              failwith ("Invalid hailstone info: " ^ line) )
-  |> find_how_many_intersect test_area_min test_area_max
+
+let part_1_aux path test_area_min test_area_max =
+  parse_hailstones path |> find_how_many_intersect test_area_min test_area_max
+
+let dot_product v1 v2 =
+  if Array.length v1 <> Array.length v2 then
+    failwith "Dot product of vectors of different dimensions." ;
+  let rec dot_product_aux idx res =
+    if idx = Array.length v1 then res
+    else dot_product_aux (idx + 1) (res +. (v1.(idx) *. v2.(idx)))
+  in
+  dot_product_aux 0 0.
+
+let cross_product v1 v2 =
+  if Array.length v1 <> 3 || Array.length v2 <> 3 then
+    failwith "Cross product supported only for 3D vectors." ;
+  let i = (v1.(1) *. v2.(2)) -. (v1.(2) *. v2.(1))
+  and j = (v1.(2) *. v2.(0)) -. (v1.(0) *. v2.(2))
+  and k = (v1.(0) *. v2.(1)) -. (v1.(1) *. v2.(0)) in
+  [|i; j; k|]
+
+let vector_by_scalar_aux v sc op =
+  let res = Array.make (Array.length v) 0. in
+  let rec vector_by_scalar_aux_aux idx =
+    if idx = Array.length res then res
+    else (
+      res.(idx) <- op v.(idx) sc ;
+      vector_by_scalar_aux_aux (idx + 1) )
+  in
+  vector_by_scalar_aux_aux 0
+
+let vector_by_scalar_mul sc v = vector_by_scalar_aux v sc ( *. )
+
+let vector_by_scalar_div v sc =
+  if sc = 0. then failwith "Division by 0." ;
+  vector_by_scalar_aux v sc ( /. )
+
+let vector_add v1 v2 =
+  if Array.length v1 <> Array.length v2 then
+    failwith "Sum of vectors of different dimensions." ;
+  let res = Array.make (Array.length v1) 0. in
+  let rec vector_diff_aux idx =
+    if idx = Array.length res then res
+    else (
+      res.(idx) <- v1.(idx) +. v2.(idx) ;
+      vector_diff_aux (idx + 1) )
+  in
+  vector_diff_aux 0
+
+let vector_diff v1 v2 =
+  if Array.length v1 <> Array.length v2 then
+    failwith "Difference of vectors of different dimensions." ;
+  vector_add v1 (vector_by_scalar_mul (-1.) v2)
 
 let test_1 () =
   part_1_aux "lib/day24/test.txt" 7. 27. |> print_int ;
@@ -81,18 +133,49 @@ let test_1 () =
 let part_1 () =
   part_1_aux "lib/day24/input.txt" 200000000000000. 400000000000000.
 
-(*
-   let test_2 () =
-     part_2_aux "lib/day24/test.txt" |> print_int ;
-     print_newline ()
+let part_2_aux path =
+  let hailstones = parse_hailstones path in
+  match hailstones with
+  | ((px_0, py_0, pz_0), (vx_0, vy_0, vz_0), _)
+    :: ((px_1, py_1, pz_1), (vx_1, vy_1, vz_1), _)
+    :: ((px_2, py_2, pz_2), (vx_2, vy_2, vz_2), _)
+    :: _ ->
+      let pos_0 = [|px_0; py_0; pz_0|]
+      and pos_1 = [|px_1; py_1; pz_1|]
+      and pos_2 = [|px_2; py_2; pz_2|]
+      and vel_0 = [|vx_0; vy_0; vz_0|]
+      and vel_1 = [|vx_1; vy_1; vz_1|]
+      and vel_2 = [|vx_2; vy_2; vz_2|] in
+      let p1 = vector_diff pos_1 pos_0
+      and v1 = vector_diff vel_1 vel_0
+      and p2 = vector_diff pos_2 pos_0
+      and v2 = vector_diff vel_2 vel_0 in
+      let t1 =
+        -.dot_product (cross_product p1 p2) v2
+        /. dot_product (cross_product v1 p2) v2
+      and t2 =
+        -.dot_product (cross_product p1 p2) v1
+        /. dot_product (cross_product p1 v2) v1
+      in
+      let c1 = vector_add pos_1 (vector_by_scalar_mul t1 vel_1)
+      and c2 = vector_add pos_2 (vector_by_scalar_mul t2 vel_2) in
+      let v = vector_by_scalar_div (vector_diff c2 c1) (t2 -. t1) in
+      let p = vector_diff c1 (vector_by_scalar_mul t1 v) in
+      p.(0) +. p.(1) +. p.(2) |> int_of_float
+  | _ ->
+      failwith "Input with less than 3 hailstones."
 
-   let part_2 () = part_2_aux "lib/day24/input.txt" *)
+let test_2 () =
+  part_2_aux "lib/day24/test.txt" |> print_int ;
+  print_newline ()
+
+let part_2 () = part_2_aux "lib/day24/input.txt"
 
 let solution () =
+  print_endline "DAY 24:" ;
   print_string "Part 1: " ;
   part_1 () |> print_int ;
+  print_newline () ;
+  print_string "Part 2: " ;
+  part_2 () |> print_int ;
   print_newline ()
-(* ;
-   print_string "Part 2: " ;
-   part_2 () |> print_int ;
-   print_newline () *)
