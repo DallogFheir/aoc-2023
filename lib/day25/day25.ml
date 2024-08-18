@@ -76,7 +76,7 @@ let replace_merge_node_in_neighbor graph random_node random_neighbor
   Hashtbl.remove neighbors_neighbors random_neighbor ;
   Hashtbl.replace neighbors_neighbors merged_node_name new_count
 
-let rec krager graph =
+let rec karger graph =
   if Hashtbl.length graph = 2 then graph
   else
     let random_node = get_random_node graph in
@@ -98,7 +98,7 @@ let rec krager graph =
       (replace_merge_node_in_neighbor graph random_node random_neighbor
          merged_node )
       merged_neighbors ;
-    krager graph
+    karger graph
 
 let extract_components graph =
   match Hashtbl.to_seq_values graph |> List.of_seq with
@@ -120,7 +120,7 @@ let multiply_component_sizes c1 c2 =
 
 let rec part_1_aux path =
   let first, second, count =
-    create_graph path |> krager |> extract_components
+    create_graph path |> karger |> extract_components
   in
   if count <> 3 then part_1_aux path else multiply_component_sizes first second
 
